@@ -91,6 +91,7 @@ const UpdateCandidateResult = () => {
             });
             if (response.status === 200) {
                 console.log('Results updated successfully');
+                toast.success('Results updated successfully');
             } else {
                 console.error('Failed to update results');
             }
