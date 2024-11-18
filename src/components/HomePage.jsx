@@ -32,6 +32,7 @@ const UpdateCandidateResult = () => {
             }
         } catch (error) {
             console.error('Error fetching candidates:', error);
+            toast.error(error.response?.data?.message || 'Something went wrong');
         }
     };
 
