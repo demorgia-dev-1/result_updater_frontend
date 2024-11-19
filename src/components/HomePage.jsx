@@ -4,6 +4,7 @@ import { BASE_URL } from './constants';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
+import { useDropzone } from 'react-dropzone';
 
 const UpdateCandidateResult = () => {
     const [batchId, setBatchId] = useState('');
@@ -16,6 +17,7 @@ const UpdateCandidateResult = () => {
     const [selectedTab, setSelectedTab] = useState('theory');
     const [practicalQuestions, setPracticalQuestions] = useState([]);
     const [vivaQuestions, setVivaQuestions] = useState([]);
+    const [selectedFile, setSelectedFile] = useState(null);
     const [practical, setPractical] = useState([]);
     const [viva, setViva] = useState([]);
 
@@ -265,6 +267,21 @@ const UpdateCandidateResult = () => {
 
         XLSX.writeFile(workbook, `candidates_${selectedTab}.xlsx`);
     };
+    const onDrop = (acceptedFiles) => {
+        const file = acceptedFiles[0];
+        setSelectedFile(file);
+        // Handle file processing here
+    };
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+
+    const handleUpload = () => {
+        if (!selectedFile) {
+            toast.error('No file selected!');
+            return;
+        }
+        // Handle file upload here
+    };
     return (
         <>
             <div className="w-full flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-200 to-gray-400">
@@ -280,7 +297,7 @@ const UpdateCandidateResult = () => {
                         </button>
                     </div>
                     <form onSubmit={handleBatchIdSubmit} className="mb-6">
-                        <div className="mb-4">
+                        <div className="mb-1">
                             <label htmlFor="batchId" className="block text-gray-700 font-bold mb-2 font-serif">
                                 Batch ID:
                             </label>
@@ -295,29 +312,61 @@ const UpdateCandidateResult = () => {
                             />
                         </div>
                         <div className="flex flex-col md:flex-row justify-between">
-                            <div className="flex gap-1 mb-4 md:mb-0">
-                                <button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-serif font-bold`}>
-                                    Update Theory
-                                </button>
-                                <button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-serif font-bold`}>
-                                    Update Practical
-                                </button>
+                            <div className='mt-7'>
+                                <div className="flex gap-1 md:mb-0">
+                                    <button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-serif font-bold`}>
+                                        Update Theory
+                                    </button>
+                                    <button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-serif font-bold`}>
+                                        Update Practical
+                                    </button>
 
-                                <button onClick={() => setSelectedTab('viva')} className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none border border-gray-700 font-serif font-bold`}>
-                                    Update Viva
-                                </button>
+                                    <button onClick={() => setSelectedTab('viva')} className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none border border-gray-700 font-serif font-bold`}>
+                                        Update Viva
+                                    </button>
+                                </div>
                             </div>
 
+                            {(selectedTab === 'practical' || selectedTab === 'viva') && (<div className='flex justify-end gap-3'>
+                                <div className='mt-7'>
+                                    <button onClick={handleDownloadExcel} className="bg-green-500 text-white py-1 px-4 hover:bg-green-600 focus:outline-none focus:ring-2  focus:ring-green-500 border border-gray-700 font-bold font-serif ">
+                                        Download
+                                    </button>
+                                </div>
 
-                            {(selectedTab === 'practical' || selectedTab === 'viva') && (<div>
-                                <button onClick={handleDownloadExcel} className="bg-green-500 text-white py-1 px-4 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 border border-gray-700 font-bold font-serif">
-                                    Download Excel
-                                </button>
+                                <div
+                                    {...getRootProps()}
+                                    className={`w-full border-2 border-dashed  p-1 transition-all ease-in-out duration-300 ${isDragActive ? 'bg-blue-100 border-blue-500' : 'bg-gray-50 border-gray-300'} hover:bg-gray-100 hover:border-gray-400 cursor-pointer text-sm`}
+                                >
+                                    <input {...getInputProps()} />
+                                    {isDragActive ? (
+                                        <p className="text-blue-700 font-semibold text-center">Drop the files here ...</p>
+                                    ) : (
+                                        <p className="text-gray-700 text-center">
+                                            Drag & drop a file here, or <span className="text-purple-600 ">click to select a file</span>
+                                        </p>
+                                    )}
+                                    {selectedFile && (
+                                        <div className="mt-1 text-center">
+                                            <span className="font-semibold">Selected File: </span>
+                                            <span className="text-gray-800">{selectedFile.name}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className=" mt-7">
+                                    <button
+                                        onClick={handleUpload}
+                                        className="bg-purple-500 hover:bg-purple-600 text-white py-1 px-4 transition-all ease-in-out duration-300 shadow-lg flex items-center space-x-2 font-serif font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-700"
+                                    >
+                                        Upload
+                                    </button>
+                                </div>
+
                             </div>)}
-
-
                         </div>
                     </form>
+
 
                     {candidates.length > 0 && (
                         <div className="overflow-x-auto">
