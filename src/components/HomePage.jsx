@@ -42,7 +42,8 @@ const UpdateCandidateResult = () => {
             }
         } catch (error) {
             console.error('Error fetching candidates:', error);
-            toast.error(error.response?.data?.message || 'Something went wrong');
+            toast.error(error?.response?.data?.message || 'Something went wrong');
+            setCandidates([]);
         }
     };
 
@@ -94,6 +95,11 @@ const UpdateCandidateResult = () => {
                 wpm: wpm[candidate._id],
                 startTime: batch.startDate,
             }));
+
+        if (updateData.length === 0) {
+            toast.error('No candidates selected!');
+            return;
+        }
 
         try {
             const response = await axios.post(`${BASE_URL}batches/${batchId}/theory`, { candidates: updateData }, {
@@ -191,13 +197,14 @@ const UpdateCandidateResult = () => {
         const localDate = new Date(date.getTime() - (offset * 60 * 1000));
         return localDate.toISOString().slice(0, 16);
     };
-    console.log('date', formatDateToIST(batch?.startDate))
-
-
     const handleDownloadExcel = () => {
         const selectedCandidateIds = Object.keys(selectedCandidates).filter(id => selectedCandidates[id]);
-
+        if (selectedCandidateIds.length === 0) {
+            toast.error('No candidates selected!');
+            return;
+        }
         const workbook = XLSX.utils.book_new();
+
 
         candidates
             .filter(candidate => selectedCandidateIds.includes(candidate._id))
@@ -221,6 +228,7 @@ const UpdateCandidateResult = () => {
                         candidateData.push(row);
                     });
                 }
+
 
                 const worksheet = XLSX.utils.json_to_sheet(candidateData);
 
