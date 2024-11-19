@@ -266,7 +266,7 @@ const UpdateCandidateResult = () => {
                         <h1 className="text-3xl font-bold font-serif">Update Candidate Results</h1>
                         <button
                             onClick={handleLogout}
-                            className="bg-red-700 text-white border border-gray-600 font-medium overflow-hidden relative px-2 py-2 hover:brightness-110 group"
+                            className="bg-red-700 text-white border border-gray-600 font-medium overflow-hidden relative px-2 py-1.5 hover:brightness-110 group"
                         >
                             <span className="relative px-7 py-2 font-serif font-bold">Logout</span>
                         </button>
@@ -283,19 +283,19 @@ const UpdateCandidateResult = () => {
                                 onChange={(e) => setBatchId(e.target.value)}
                                 placeholder="Enter Batch ID"
                                 required
-                                className="w-full md:w-96 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full md:w-96 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
                             />
                         </div>
                         <div className="flex flex-col md:flex-row justify-between">
                             <div className="flex gap-1 mb-4 md:mb-0">
-                                <button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-gray-200 text-gray-800'}  focus:outline-none  border border-gray-700 font-serif font-bold`}>
+                                <button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-serif font-bold`}>
                                     Update Theory
                                 </button>
-                                <button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-gray-200 text-gray-800'} focus:outline-none border border-gray-700 font-serif font-bold`}>
+                                <button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-serif font-bold`}>
                                     Update Practical
                                 </button>
 
-                                <button onClick={() => setSelectedTab('viva')} className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-gray-200 text-gray-800'}  focus:outline-none border border-gray-700 font-serif font-bold`}>
+                                <button onClick={() => setSelectedTab('viva')} className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none border border-gray-700 font-serif font-bold`}>
                                     Update Viva
                                 </button>
                             </div>
@@ -338,6 +338,7 @@ const UpdateCandidateResult = () => {
                                                         type="checkbox"
                                                         checked={selectAll}
                                                         onChange={handleSelectAllChange}
+
                                                     />
                                                 </th>
                                                 <th className="py-2 border border-gray-800 font-serif font-bold">Enrollment No</th>
@@ -368,7 +369,9 @@ const UpdateCandidateResult = () => {
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedCandidates[candidate._id] || false}
-                                                    onChange={() => handleCheckboxChange(candidate._id)}
+                                                    onChange={() => handleCheckboxChange(candidate._id)
+
+                                                    }
                                                 />
                                             </td>
                                             <td className="border border-gray-800 px-4 py-2 font-serif">{candidate.enrollmentNo}</td>
@@ -381,7 +384,7 @@ const UpdateCandidateResult = () => {
                                                             value={percentages[candidate._id] || ''}
                                                             onChange={(e) => handlePercentageChange(candidate._id, e.target.value)}
                                                             placeholder='Percentage'
-                                                            className="w-20 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-serif"
+                                                            className="w-20 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-serif bg-gradient-to-b from-slate-100 to-slate-300"
                                                         />
                                                     </td>
                                                     <td className="border border-gray-800 px-4 py-2">
@@ -390,7 +393,7 @@ const UpdateCandidateResult = () => {
                                                             value={wpm[candidate._id] || ''}
                                                             onChange={(e) => handleWpmChange(candidate._id, e.target.value)}
                                                             placeholder='WPM'
-                                                            className="w-20 px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 font-serif"
+                                                            className="w-20 px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 font-serif bg-gradient-to-b from-slate-100 to-slate-300"
                                                         />
                                                     </td>
                                                     <td className="border border-gray-800 px-4 py-2">
@@ -398,7 +401,7 @@ const UpdateCandidateResult = () => {
                                                             type="datetime-local"
                                                             value={formatDateToIST(batch.startDate)}
                                                             onChange={(e) => handleDateChange(e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 "
+                                                            className="w-full px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
                                                         />
                                                     </td>
                                                 </>
@@ -411,7 +414,7 @@ const UpdateCandidateResult = () => {
                                                             type="datetime-local"
                                                             value={formatDateToIST(batch.startDate)}
                                                             onChange={(e) => handleDateChange(e.target.value)}
-                                                            className="w-[60%] px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            className="w-[60%] px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
                                                         />
                                                     </td>
                                                 </>
@@ -424,7 +427,7 @@ const UpdateCandidateResult = () => {
                                                             type="datetime-local"
                                                             value={formatDateToIST(batch.startDate)}
                                                             onChange={(e) => handleDateChange(e.target.value)}
-                                                            className="w-[60%] px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            className="w-[60%] px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
                                                         />
                                                     </td>
                                                 </>
@@ -434,9 +437,9 @@ const UpdateCandidateResult = () => {
 
                                 </tbody>
                             </table>
-                            <button onClick={handleUpdateResults} className="bg-green-500 text-white py-1 px-4  hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mt-4 border border-gray-700 font-serif font-bold">
+                            {selectedTab === 'theory' && (<button onClick={handleUpdateResults} className="bg-green-500 text-white py-1 px-4  hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mt-4 border border-gray-700 font-serif font-bold">
                                 Update Results
-                            </button>
+                            </button>)}
                         </div>
                     )}
                 </div>
