@@ -22,6 +22,7 @@ const UpdateCandidateResult = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [practical, setPractical] = useState([]);
     const [viva, setViva] = useState([]);
+    const [dates, setDates] = useState({});
 
     const navigate = useNavigate();
 
@@ -82,11 +83,11 @@ const UpdateCandidateResult = () => {
         setSelectAll(!selectAll);
     };
 
-    const handleDateChange = (value) => {
-        setBatch({
-            ...batch,
-            startDate: value
-        });
+    const handleDateChange = (candidateId, value) => {
+        setDates(prevDates => ({
+            ...prevDates,
+            [candidateId]: value
+        }));
     };
 
     const handleUpdateResults = async () => {
@@ -97,7 +98,7 @@ const UpdateCandidateResult = () => {
                 _id: candidate._id,
                 percentage: percentages[candidate._id],
                 wpm: wpm[candidate._id],
-                startTime: batch.startDate,
+                startTime: dates[candidate._id] || batch.startDate,
             }));
 
         if (updateData.length === 0) {
@@ -463,8 +464,8 @@ const UpdateCandidateResult = () => {
                                                     <td className="border border-gray-800 px-4 py-2">
                                                         <input
                                                             type="datetime-local"
-                                                            value={formatDateToIST(batch.startDate)}
-                                                            onChange={(e) => handleDateChange(e.target.value)}
+                                                            value={dates[candidate._id] || formatDateToIST(batch.startDate)}
+                                                            onChange={(e) => handleDateChange(candidate._id, e.target.value)}
                                                             className="w-full px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300 font-mono"
                                                         />
                                                     </td>
@@ -476,9 +477,9 @@ const UpdateCandidateResult = () => {
                                                     <td className="border border-gray-800 px-4 py-2">
                                                         <input
                                                             type="datetime-local"
-                                                            value={formatDateToIST(batch.startDate)}
-                                                            onChange={(e) => handleDateChange(e.target.value)}
-                                                            className="w-[60%] px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
+                                                            value={dates[candidate._id] || formatDateToIST(batch.startDate)}
+                                                            onChange={(e) => handleDateChange(candidate._id, e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300 font-mono"
                                                         />
                                                     </td>
                                                 </>
@@ -489,9 +490,9 @@ const UpdateCandidateResult = () => {
                                                     <td className="border border-gray-800 px-4 py-2">
                                                         <input
                                                             type="datetime-local"
-                                                            value={formatDateToIST(batch.startDate)}
-                                                            onChange={(e) => handleDateChange(e.target.value)}
-                                                            className="w-[60%] px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
+                                                            value={dates[candidate._id] || formatDateToIST(batch.startDate)}
+                                                            onChange={(e) => handleDateChange(candidate._id, e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300 font-mono"
                                                         />
                                                     </td>
                                                 </>
