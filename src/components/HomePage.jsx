@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { useDropzone } from 'react-dropzone';
+import { MdOutlineFileDownload, MdOutlineUploadFile, MdOutlineLogout } from 'react-icons/md';
+
 
 const UpdateCandidateResult = () => {
     const [batchId, setBatchId] = useState('');
@@ -121,64 +123,6 @@ const UpdateCandidateResult = () => {
         }
     };
 
-
-    const handleUpdatePracticalResults = async () => {
-        const token = sessionStorage.getItem('token');
-        const updateData = candidates
-            .filter(candidate => selectedCandidates[candidate._id])
-            .map(candidate => ({
-                _id: candidate._id,
-                percentage: percentages[candidate._id],
-                wpm: wpm[candidate._id],
-                startTime: batch.startDate,
-            }));
-
-        try {
-            const response = await axios.post(`${BASE_URL}batches/${batchId}/practical`, { candidates: updateData }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            if (response.status === 200) {
-                console.log('Results updated successfully');
-                toast.success('Results updated successfully');
-            } else {
-                console.error('Failed to update results');
-            }
-        } catch (error) {
-            console.error('Error updating results:', error);
-            toast.error(error.response?.data?.message || 'Something went wrong');
-        }
-    };
-
-    const handleUpdateVivaResults = async () => {
-        const token = sessionStorage.getItem('token');
-        const updateData = candidates
-            .filter(candidate => selectedCandidates[candidate._id])
-            .map(candidate => ({
-                _id: candidate._id,
-                percentage: percentages[candidate._id],
-                wpm: wpm[candidate._id],
-                startTime: batch.startDate,
-            }));
-
-        try {
-            const response = await axios.post(`${BASE_URL}batches/${batchId}/viva`, { candidates: updateData }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            if (response.status === 200) {
-                console.log('Results updated successfully');
-                toast.success('Results updated successfully');
-            } else {
-                console.error('Failed to update results');
-            }
-        } catch (error) {
-            console.error('Error updating results:', error);
-            toast.error(error.response?.data?.message || 'Something went wrong');
-        }
-    };
     const handleLogout = () => {
         sessionStorage.removeItem('token');
         navigate('/login');
@@ -216,7 +160,9 @@ const UpdateCandidateResult = () => {
                 if (selectedTab === 'practical') {
                     practicalQuestions?.forEach((question, index) => {
                         const row = {
+                            'Question Id': question._id,
                             'Questions': `Q.${index + 1} : ${question.title}`,
+                            'MM': question.marks,
                             'Update Marks': ''
                         };
                         candidateData.push(row);
@@ -224,7 +170,9 @@ const UpdateCandidateResult = () => {
                 } else if (selectedTab === 'viva') {
                     vivaQuestions?.forEach((question, index) => {
                         const row = {
+                            'Question Id': question._id,
                             'Questions': `Q.${index + 1} (MM ${question.marks}): ${question.title}`,
+                            'MM': question.marks,
                             'Update Marks': ''
                         };
                         candidateData.push(row);
@@ -270,35 +218,92 @@ const UpdateCandidateResult = () => {
     const onDrop = (acceptedFiles) => {
         const file = acceptedFiles[0];
         setSelectedFile(file);
-        // Handle file processing here
+
     };
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
-    const handleUpload = () => {
+
+    const handleUpload = async () => {
         if (!selectedFile) {
             toast.error('No file selected!');
             return;
         }
-        // Handle file upload here
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            const resultData = jsonData.map(row => ({
+                question: row['Question Id'],
+                marksObtained: row['Update Marks']
+            }));
+
+            const updateData = candidates
+                .filter(candidate => selectedCandidates[candidate._id])
+                .map(candidate => ({
+                    _id: candidate._id,
+                    responses: resultData
+                }));
+
+            if (updateData.length === 0) {
+                toast.error('No candidates selected!');
+                return;
+            }
+
+            const token = sessionStorage.getItem('token');
+            try {
+                let response;
+                if (selectedTab === 'practical') {
+                    response = await axios.post(`${BASE_URL}batches/${batchId}/practical`, { result: updateData }, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+                } else if (selectedTab === 'viva') {
+                    response = await axios.post(`${BASE_URL}batches/${batchId}/viva`, { result: updateData }, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+                }
+
+                if (response.status === 200) {
+                    console.log('Results updated successfully');
+                    toast.success('Results updated successfully');
+                } else {
+                    console.error('Failed to update results');
+                }
+            } catch (error) {
+                console.error('Error updating results:', error);
+                toast.error(error.response?.data?.message || 'Something went wrong');
+            }
+        };
+        reader.readAsArrayBuffer(selectedFile);
     };
+
     return (
         <>
             <div className="w-full flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-200 to-gray-400">
-                <span className="text-4xl font-semibold mb-3 font-serif">Welcome</span>
+                <span className="text-4xl font-semibold mb-3 font-mono">Welcome</span>
                 <div className="bg-white p-8 shadow-md w-full max-w-6xl">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 border border-gray-600 p-3 bg-gradient-to-b from-slate-200 to-slate-400 w-full">
-                        <h1 className="text-3xl font-bold font-serif">Update Candidate Results</h1>
+                        <h1 className="text-3xl font-bold font-mono">Update Candidate Results</h1>
                         <button
                             onClick={handleLogout}
-                            className="bg-red-700 text-white border border-gray-600 font-medium overflow-hidden relative px-2 py-1.5 hover:brightness-110 group"
+                            className="bg-gradient-to-t from-red-700 to-red-500 text-white border border-gray-600 font-medium overflow-hidden relative px-2 py-1.5 hover:brightness-110 group flex items-center font-mono gap-2"
                         >
-                            <span className="relative px-7 py-2 font-serif font-bold">Logout</span>
+                            <span><MdOutlineLogout className='text-xl' /></span>
+                            <span >Logout</span>
                         </button>
                     </div>
                     <form onSubmit={handleBatchIdSubmit} className="mb-6">
                         <div className="mb-1">
-                            <label htmlFor="batchId" className="block text-gray-700 font-bold mb-2 font-serif">
+                            <label htmlFor="batchId" className="block text-gray-700 font-bold mb-2 font-mono">
                                 Batch ID:
                             </label>
                             <input
@@ -308,29 +313,30 @@ const UpdateCandidateResult = () => {
                                 onChange={(e) => setBatchId(e.target.value)}
                                 placeholder="Enter Batch ID"
                                 required
-                                className="w-full md:w-96 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
+                                className="w-full md:w-96 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300 font-mono"
                             />
                         </div>
                         <div className="flex flex-col md:flex-row justify-between">
                             <div className='mt-7'>
                                 <div className="flex gap-1 md:mb-0">
-                                    <button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-serif font-bold`}>
+                                    <button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-mono font-bold`}>
                                         Update Theory
                                     </button>
-                                    <button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-serif font-bold`}>
+                                    {practical !== null && (<button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-mono font-bold`}>
                                         Update Practical
-                                    </button>
+                                    </button>)}
 
-                                    <button onClick={() => setSelectedTab('viva')} className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none border border-gray-700 font-serif font-bold`}>
+                                    {viva !== null && (<button onClick={() => setSelectedTab('viva')} className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none border border-gray-700 font-mono font-bold`}>
                                         Update Viva
-                                    </button>
+                                    </button>)}
                                 </div>
                             </div>
 
                             {(selectedTab === 'practical' || selectedTab === 'viva') && (<div className='flex justify-end gap-3'>
                                 <div className='mt-7'>
-                                    <button onClick={handleDownloadExcel} className="bg-green-500 text-white py-1 px-4 hover:bg-green-600 focus:outline-none focus:ring-2  focus:ring-green-500 border border-gray-700 font-bold font-serif ">
-                                        Download
+                                    <button onClick={handleDownloadExcel} className="bg-green-500 text-white py-1 px-2 hover:bg-green-600 focus:outline-none focus:ring-2  focus:ring-green-500 border border-gray-700 font-bold font-mono flex items-center gap-2">
+                                        <span ><MdOutlineFileDownload className='text-xl' /></span>
+                                        <span>Download</span>
                                     </button>
                                 </div>
 
@@ -357,9 +363,10 @@ const UpdateCandidateResult = () => {
                                 <div className=" mt-7">
                                     <button
                                         onClick={handleUpload}
-                                        className="bg-purple-500 hover:bg-purple-600 text-white py-1 px-4 transition-all ease-in-out duration-300 shadow-lg flex items-center space-x-2 font-serif font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-700"
+                                        className="bg-purple-500 hover:bg-purple-600 text-white py-1 px-4 transition-all ease-in-out duration-300 shadow-lg flex items-center space-x-2 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-700"
                                     >
-                                        Upload
+                                        <span ><MdOutlineUploadFile className='text-xl' /></span>
+                                        <span>Upload</span>
                                     </button>
                                 </div>
 
@@ -381,11 +388,11 @@ const UpdateCandidateResult = () => {
                                                     onChange={handleSelectAllChange}
                                                 />
                                             </th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Enrollment No</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Name</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Update Percentage</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Word Per Minute</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Batch Start Date</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Enrollment No</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Name</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Update Percentage</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Word Per Minute</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Batch Start Date</th>
                                             </>
                                         )}
                                         {selectedTab === 'practical' && (
@@ -398,9 +405,9 @@ const UpdateCandidateResult = () => {
 
                                                     />
                                                 </th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Enrollment No</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Name</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Batch Start Date</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Enrollment No</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Name</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Batch Start Date</th>
                                             </>
                                         )}
                                         {selectedTab === 'viva' && (
@@ -412,9 +419,9 @@ const UpdateCandidateResult = () => {
                                                         onChange={handleSelectAllChange}
                                                     />
                                                 </th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Enrollment No</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Name</th>
-                                                <th className="py-2 border border-gray-800 font-serif font-bold">Batch Start Date</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Enrollment No</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Name</th>
+                                                <th className="py-2 border border-gray-800 font-mono font-bold">Batch Start Date</th>
                                             </>
                                         )}
                                     </tr>
@@ -431,8 +438,8 @@ const UpdateCandidateResult = () => {
                                                     }
                                                 />
                                             </td>
-                                            <td className="border border-gray-800 px-4 py-2 font-serif">{candidate.enrollmentNo}</td>
-                                            <td className="border border-gray-800 px-4 py-2 font-serif">{candidate.name}</td>
+                                            <td className="border border-gray-800 px-4 py-2 font-mono">{candidate.enrollmentNo}</td>
+                                            <td className="border border-gray-800 px-4 py-2 font-mono">{candidate.name}</td>
                                             {selectedTab === 'theory' && (
                                                 <>
                                                     <td className="border border-gray-800 px-4 py-2">
@@ -441,7 +448,7 @@ const UpdateCandidateResult = () => {
                                                             value={percentages[candidate._id] || ''}
                                                             onChange={(e) => handlePercentageChange(candidate._id, e.target.value)}
                                                             placeholder='Percentage'
-                                                            className="w-20 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-serif bg-gradient-to-b from-slate-100 to-slate-300"
+                                                            className="w-20 px-3 py-2 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono bg-gradient-to-b from-slate-100 to-slate-300"
                                                         />
                                                     </td>
                                                     <td className="border border-gray-800 px-4 py-2">
@@ -450,7 +457,7 @@ const UpdateCandidateResult = () => {
                                                             value={wpm[candidate._id] || ''}
                                                             onChange={(e) => handleWpmChange(candidate._id, e.target.value)}
                                                             placeholder='WPM'
-                                                            className="w-20 px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 font-serif bg-gradient-to-b from-slate-100 to-slate-300"
+                                                            className="w-20 px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono bg-gradient-to-b from-slate-100 to-slate-300"
                                                         />
                                                     </td>
                                                     <td className="border border-gray-800 px-4 py-2">
@@ -458,7 +465,7 @@ const UpdateCandidateResult = () => {
                                                             type="datetime-local"
                                                             value={formatDateToIST(batch.startDate)}
                                                             onChange={(e) => handleDateChange(e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300"
+                                                            className="w-full px-3 py-2 border border-gray-800  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gradient-to-b from-slate-100 to-slate-300 font-mono"
                                                         />
                                                     </td>
                                                 </>
@@ -494,7 +501,7 @@ const UpdateCandidateResult = () => {
 
                                 </tbody>
                             </table>
-                            {selectedTab === 'theory' && (<button onClick={handleUpdateResults} className="bg-green-500 text-white py-1 px-4  hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mt-4 border border-gray-700 font-serif font-bold">
+                            {selectedTab === 'theory' && (<button onClick={handleUpdateResults} className="bg-green-500 text-white py-1 px-4  hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mt-4 border border-gray-700 font-mono font-bold">
                                 Update Results
                             </button>)}
                         </div>

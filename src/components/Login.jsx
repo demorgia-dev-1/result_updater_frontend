@@ -77,30 +77,30 @@ function Login({ setIsAuthenticated }) {
             <div className="flex-1 flex items-center justify-center p-4 lg:p-0">
                 <div className="w-full max-w-md">
                     <div className="flex flex-col md:flex-row items-center justify-center mb-8 space-y-4 md:space-y-0">
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center md:text-left">Login</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center md:text-left font-mono">Login</h2>
                     </div>
                     <div className="bg-transparent backdrop-blur-[40px] rounded-2xl shadow-2xl p-8">
-                        <h3 className="text-2xl font-bold text-center mb-8 text-gray-800">
+                        <h3 className="text-2xl font-bold text-center mb-8 text-gray-800 font-mono ">
                             Welcome
                         </h3>
                         {step === 'login' ? (
                             <form onSubmit={handleLoginSubmit} className="space-y-6">
                                 <div>
-                                    <label htmlFor="email" className="text-md font-medium text-gray-900 block mb-2">Email</label>
+                                    <label htmlFor="email" className="text-md text-gray-900 block mb-2 font-mono font-bold">Email</label>
                                     <input
                                         type="text"
                                         id="email"
                                         name="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="bg-transparent backdrop-blur-[40px] w-full px-4 py-3 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+                                        className="bg-transparent backdrop-blur-[40px] w-full px-4 py-3 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out font-mono"
                                         placeholder="Enter your email"
                                         autoComplete="username"
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full px-4 py-3 text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-md hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out font-bold"
+                                    className="w-full px-4 py-3 text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-md hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out font-bold font-mono"
                                 >
                                     Send OTP
                                 </button>
@@ -108,20 +108,20 @@ function Login({ setIsAuthenticated }) {
                         ) : (
                             <form onSubmit={handleOtpSubmit} className="space-y-6">
                                 <div>
-                                    <label htmlFor="otp" className="text-md font-medium text-gray-900 block mb-2">OTP</label>
+                                    <label htmlFor="otp" className="text-md font-bold text-gray-900 block mb-2 font-mono">OTP</label>
                                     <input
                                         type="text"
                                         id="otp"
                                         name="otp"
                                         value={formData.otp}
                                         onChange={handleChange}
-                                        className="bg-transparent backdrop-blur-[40px] w-full px-4 py-3 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+                                        className="bg-transparent backdrop-blur-[40px] w-full px-4 py-3 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out font-mono"
                                         placeholder="Enter the OTP sent to your email"
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full px-4 py-3 text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-md hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out font-bold"
+                                    className="w-full px-4 py-3 text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-md hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out font-bold font-mono"
                                 >
                                     Verify OTP
                                 </button>
