@@ -71,10 +71,10 @@ function Login({ setIsAuthenticated }) {
                 <img
                     src={login}
                     alt="loginImg"
-                    className="w-full md:w-3/4 lg:w-2/3 hidden lg:block rounded-xl mb-10"
+                    className="w-full md:w-3/4 lg:w-2/3 hidden lg:block rounded-xl mb-10 sm:mb-2"
                 />
             </div>
-            <div className="flex-1 flex items-center justify-center p-4 lg:p-0">
+            <div className="flex-1 flex items-center justify-center p-4 lg:p-0 sm:pt-2">
                 <div className="w-full max-w-md">
                     <div className="flex flex-col md:flex-row items-center justify-center mb-8 space-y-4 md:space-y-0">
                         <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center md:text-left font-mono">Login</h2>
