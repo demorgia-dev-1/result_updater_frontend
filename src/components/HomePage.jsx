@@ -22,6 +22,7 @@ const UpdateCandidateResult = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [practical, setPractical] = useState([]);
     const [viva, setViva] = useState([]);
+    const [theory, setTheory] = useState([]);
     const [dates, setDates] = useState({});
 
     const navigate = useNavigate();
@@ -38,10 +39,12 @@ const UpdateCandidateResult = () => {
             if (response.status === 200) {
                 setBatch(response.data.batch);
                 setCandidates(response.data.candidates);
+
                 setPracticalQuestions(response.data.practicalQuestions);
                 setVivaQuestions(response.data.vivaQuestions);
                 setPractical(response.data?.batch?.practicalQuestionBank);
                 setViva(response.data?.batch?.vivaQuestionBank);
+                setTheory(response.data?.batch?.theoryQuestionBank);
             } else {
                 console.error('Failed to fetch candidates');
             }
@@ -150,70 +153,75 @@ const UpdateCandidateResult = () => {
             toast.error('No candidates selected!');
             return;
         }
-        const workbook = XLSX.utils.book_new();
 
+        const workbook = XLSX.utils.book_new();
+        const combinedData = [];
 
         candidates
             .filter(candidate => selectedCandidateIds.includes(candidate._id))
             .forEach(candidate => {
-                const candidateData = [];
-
                 if (selectedTab === 'practical') {
-                    practicalQuestions?.forEach((question, index) => {
+                    practicalQuestions?.forEach((question) => {
                         const row = {
-                            'Question Id': question._id,
-                            'Questions': `Q.${index + 1} : ${question.title}`,
-                            'MM': question.marks,
+                            'Candidate ID': candidate._id,
+                            'Enrollment No': candidate.enrollmentNo,
+                            'Name': candidate.name,
+                            'Question Id': `${question._id}`,
+                            'Max Marks': question.marks,
                             'Update Marks': ''
                         };
-                        candidateData.push(row);
+                        combinedData.push(row);
                     });
                 } else if (selectedTab === 'viva') {
-                    vivaQuestions?.forEach((question, index) => {
+                    vivaQuestions?.forEach((question) => {
                         const row = {
-                            'Question Id': question._id,
-                            'Questions': `Q.${index + 1} (MM ${question.marks}): ${question.title}`,
-                            'MM': question.marks,
+                            'Candidate ID': candidate._id,
+                            'Enrollment No': candidate.enrollmentNo,
+                            'Name': candidate.name,
+                            'Question Id': `${question._id}`,
+                            'Max Marks': question.marks,
                             'Update Marks': ''
                         };
-                        candidateData.push(row);
+                        combinedData.push(row);
                     });
                 }
-
-
-                const worksheet = XLSX.utils.json_to_sheet(candidateData);
-
-
-                const colWidths = candidateData.reduce((acc, row) => {
-                    Object.keys(row).forEach((key, i) => {
-                        const value = row[key] ? row[key].toString() : '';
-                        acc[i] = Math.max(acc[i] || 10, value.length + 2);
-                    });
-                    return acc;
-                }, []);
-
-                worksheet['!cols'] = colWidths.map(width => ({ wch: width }));
-
-
-                worksheet['!rows'] = [{ hpx: 30 }];
-
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const address = XLSX.utils.encode_col(C) + "1";
-                    if (!worksheet[address]) continue;
-                    if (!worksheet[address].s) worksheet[address].s = {};
-                    worksheet[address].s = {
-                        alignment: {
-                            wrapText: true,
-                            vertical: 'center',
-                            horizontal: 'center'
-                        }
-                    };
-                }
-
-                XLSX.utils.book_append_sheet(workbook, worksheet, candidate.enrollmentNo);
             });
 
+        const worksheet = XLSX.utils.json_to_sheet(combinedData);
+
+        const colWidths = combinedData.reduce((acc, row) => {
+            Object.keys(row).forEach((key, i) => {
+                const value = row[key] ? row[key].toString() : '';
+                acc[i] = Math.max(acc[i] || 10, value.length + 2);
+            });
+            return acc;
+        }, []);
+
+        worksheet['!cols'] = colWidths.map(width => ({ wch: width }));
+        worksheet['!rows'] = [{ hpx: 30 }];
+
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const address = XLSX.utils.encode_col(C) + "1";
+            if (!worksheet[address]) continue;
+            if (!worksheet[address].s) worksheet[address].s = {};
+            worksheet[address].s = {
+                alignment: {
+                    wrapText: true,
+                    vertical: 'center',
+                    horizontal: 'center'
+                },
+                fill: {
+                    patternType: "solid",
+                    fgColor: { rgb: "FFFF00" }
+                },
+                font: {
+                    bold: true
+                }
+            };
+        }
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Candidates');
         XLSX.writeFile(workbook, `candidates_${selectedTab}.xlsx`);
     };
     const onDrop = (acceptedFiles) => {
@@ -233,57 +241,67 @@ const UpdateCandidateResult = () => {
 
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-            const resultData = jsonData.map(row => ({
-                question: row['Question Id'],
-                marksObtained: row['Update Marks']
-            }));
+                console.log('jsonData:', jsonData);
 
-            const updateData = candidates
-                .filter(candidate => selectedCandidates[candidate._id])
-                .map(candidate => ({
-                    _id: candidate._id,
-                    responses: resultData
+                // Group responses by candidate
+                const groupedResponses = {};
+                jsonData.forEach(row => {
+                    const candidateId = row['Candidate ID'];
+                    if (!groupedResponses[candidateId]) {
+                        groupedResponses[candidateId] = [];
+                    }
+                    groupedResponses[candidateId].push({
+                        question: row['Question Id'],
+                        marksObtained: row['Update Marks']
+                    });
+                });
+
+                const updateData = Object.keys(groupedResponses).map(candidateId => ({
+                    _id: candidateId,
+                    responses: groupedResponses[candidateId]
                 }));
 
-            if (updateData.length === 0) {
-                toast.error('No candidates selected!');
-                return;
-            }
-
-            const token = sessionStorage.getItem('token');
-            try {
-                let response;
-                if (selectedTab === 'practical') {
-                    response = await axios.post(`${BASE_URL}batches/${batchId}/practical`, { result: updateData }, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    });
-                } else if (selectedTab === 'viva') {
-                    response = await axios.post(`${BASE_URL}batches/${batchId}/viva`, { result: updateData }, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    });
+                if (updateData.length === 0) {
+                    toast.error('No candidates selected!');
+                    return;
                 }
+
+                console.log('updateData:', updateData);
+
+                const token = sessionStorage.getItem('token');
+                const url = selectedTab === 'practical'
+                    ? `${BASE_URL}batches/${batchId}/practical`
+                    : `${BASE_URL}batches/${batchId}/viva`;
+
+                const response = await axios.post(url, { result: updateData }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
 
                 if (response.status === 200) {
                     console.log('Results updated successfully');
                     toast.success('Results updated successfully');
                 } else {
                     console.error('Failed to update results');
+                    toast.error('Failed to update results');
                 }
             } catch (error) {
-                console.error('Error updating results:', error);
+                console.error('Error processing file:', error);
                 toast.error(error.response?.data?.message || 'Something went wrong');
             }
         };
+
+        reader.onerror = (error) => {
+            console.error('Error reading file:', error);
+            toast.error('Error reading file');
+        };
+
         reader.readAsArrayBuffer(selectedFile);
     };
 
@@ -320,9 +338,9 @@ const UpdateCandidateResult = () => {
                         <div className="flex flex-col md:flex-row justify-between">
                             <div className='mt-7'>
                                 <div className="flex gap-1 md:mb-0">
-                                    <button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-mono font-bold`}>
+                                    {theory !== null && (<button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-mono font-bold`}>
                                         Update Theory
-                                    </button>
+                                    </button>)}
                                     {practical !== null && (<button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-mono font-bold`}>
                                         Update Practical
                                     </button>)}
