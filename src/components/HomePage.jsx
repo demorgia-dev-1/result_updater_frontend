@@ -24,7 +24,7 @@ const UpdateCandidateResult = () => {
     const [viva, setViva] = useState([]);
     const [theory, setTheory] = useState([]);
     const [dates, setDates] = useState({});
-
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleBatchIdSubmit = async (e) => {
@@ -108,7 +108,7 @@ const UpdateCandidateResult = () => {
             toast.error('No candidates selected!');
             return;
         }
-
+        setIsLoading(true);
         try {
             const response = await axios.post(`${BASE_URL}batches/${batchId}/theory`, { candidates: updateData }, {
                 headers: {
@@ -124,6 +124,8 @@ const UpdateCandidateResult = () => {
         } catch (error) {
             console.error('Error updating results:', error);
             toast.error(error.response?.data?.message || 'Something went wrong');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -338,16 +340,34 @@ const UpdateCandidateResult = () => {
                         <div className="flex flex-col md:flex-row justify-between">
                             <div className='mt-7'>
                                 <div className="flex gap-1 md:mb-0">
-                                    {theory !== null && (<button onClick={() => setSelectedTab('theory')} className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none  border border-gray-700 font-mono font-bold`}>
-                                        Update Theory
-                                    </button>)}
-                                    {practical !== null && (<button onClick={() => setSelectedTab('practical')} className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white ' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-mono font-bold`}>
-                                        Update Practical
-                                    </button>)}
-
-                                    {viva !== null && (<button onClick={() => setSelectedTab('viva')} className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'}  focus:outline-none border border-gray-700 font-mono font-bold`}>
-                                        Update Viva
-                                    </button>)}
+                                    {batchId && (
+                                        <>
+                                            {theory !== null && (
+                                                <button
+                                                    onClick={() => setSelectedTab('theory')}
+                                                    className={`py-1 px-4 ${selectedTab === 'theory' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-mono font-bold`}
+                                                >
+                                                    Update Theory
+                                                </button>
+                                            )}
+                                            {practical !== null && (
+                                                <button
+                                                    onClick={() => setSelectedTab('practical')}
+                                                    className={`py-1 px-4 ${selectedTab === 'practical' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-mono font-bold`}
+                                                >
+                                                    Update Practical
+                                                </button>
+                                            )}
+                                            {viva !== null && (
+                                                <button
+                                                    onClick={() => setSelectedTab('viva')}
+                                                    className={`py-1 px-4 ${selectedTab === 'viva' ? 'bg-blue-500 text-white border-x-2 border-gray-700' : 'bg-blue-100 text-gray-800'} focus:outline-none border border-gray-700 font-mono font-bold`}
+                                                >
+                                                    Update Viva
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -520,9 +540,15 @@ const UpdateCandidateResult = () => {
 
                                 </tbody>
                             </table>
-                            {selectedTab === 'theory' && (<button onClick={handleUpdateResults} className="bg-green-500 text-white py-1 px-4  hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mt-4 border border-gray-700 font-mono font-bold">
-                                Update Results
-                            </button>)}
+                            {selectedTab === 'theory' && (
+                                <button
+                                    onClick={handleUpdateResults}
+                                    className="bg-green-500 text-white py-1 px-4 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mt-4 border border-gray-700 font-mono font-bold"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? 'Updating...' : 'Update Results'}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
