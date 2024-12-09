@@ -168,6 +168,7 @@ const UpdateCandidateResult = () => {
                             'Candidate ID': candidate._id,
                             'Enrollment No': candidate.enrollmentNo,
                             'Name': candidate.name,
+                            'NOS': question.nos.nosCode,
                             'Question Id': `${question._id}`,
                             'Max Marks': question.marks,
                             'Update Marks': ''
@@ -180,6 +181,7 @@ const UpdateCandidateResult = () => {
                             'Candidate ID': candidate._id,
                             'Enrollment No': candidate.enrollmentNo,
                             'Name': candidate.name,
+                            'NOS': question.nos.nosCode,
                             'Question Id': `${question._id}`,
                             'Max Marks': question.marks,
                             'Update Marks': ''

@@ -35,15 +35,21 @@ function Login({ setIsAuthenticated }) {
                 const endpoint = `${BASE_URL}login`;
                 const response = await axios.post(endpoint, { email: formData.email });
 
-                if (response.status === 200 && response.data.token) {
-                    localStorage.setItem('token', response.data.token);
+                console.log(response)
+                if (response.status === 200) {
+
+                    // sessionStorage.setItem('token', response.data.token);
                     toast.success('OTP sent to your email!');
                     setStep('otp');
+
                 } else {
+                    console.log(response.status)
                     throw new Error('Failed to send OTP');
+
                 }
             } catch (error) {
                 toast.error(error.response?.data?.message || 'Something went wrong');
+                console.log(error)
             }
         }
     };
@@ -57,7 +63,7 @@ function Login({ setIsAuthenticated }) {
 
             toast.success('Login successful!');
             setFormData({ email: '', otp: '' });
-            localStorage.setItem("token", response.data.token);
+            sessionStorage.setItem("token", response.data.token);
             setIsAuthenticated(true);
             setRedirect(true);
         } catch (error) {
